@@ -41,9 +41,10 @@ app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 
 	//my very own timer
 	var inicio;
+	var relogios = {}
 	$scope.inicia = function(reg){
 		console.log('inicio')
-		inicio = $interval(function(){
+		relogios[reg.$id] = $interval(function(){
 			adicionaSegundo(reg)
 		},999) //1 milisegundo para processamento, a headstart for the timer
 	}
@@ -53,7 +54,8 @@ app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 		reg.timer.hrs = 0;
 		reg.timer.mins = 0;
 		reg.timer.secs = 0;
-		$scope.dados.$save(reg)		
+		atualizaTempoRealizado(reg)
+		salvaRegistro(reg)		
 	}
 
 	$scope.add5 = function(reg){
@@ -71,7 +73,7 @@ app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 			}
 		}
 		atualizaTempoRealizado(reg)
-		$scope.dados.$save(reg)		
+		salvaRegistro(reg)		
 	}
 
 	$scope.del5 = function(reg){
@@ -97,13 +99,23 @@ app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 			}
 		}
 		atualizaTempoRealizado(reg)
-		$scope.dados.$save(reg)
+		salvaRegistro(reg)
 	}
 
 	$scope.para = function(reg){
-		$interval.cancel(inicio)
-		inicio = undefined
-		$scope.dados.$save(reg)
+		$interval.cancel(relogios[reg.$id])
+		relogios[reg.$id] = undefined
+		console.log('parando relogio')
+		atualizaTempoRealizado(reg)
+		salvaRegistro(reg)
+	}
+
+	function salvaRegistro(reg){
+		$scope.dados.$save(reg).then(function(ref){
+			console.log('Salvo com sucesso: ', ref)
+		}, function(error){
+			console.log('Erro: ', error)
+		})
 	}
 
 	function adicionaSegundo(reg) {
@@ -129,7 +141,7 @@ app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 		}
 		atualizaTempoRealizado(reg)
 		if ((reg.timer.secs == 0) || (reg.timer.secs == 30)){
-			$scope.dados.$save(reg)
+			salvaRegistro(reg)
 		}
 	}
 
@@ -181,7 +193,7 @@ app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 		if (registroNovo) {
 			$scope.dados.$add(reg)
 		} else {
-			$scope.dados.$save(reg)
+			salvaRegistro(reg)
 		}
 		$scope.mostraRegistroForm = false
 	}
