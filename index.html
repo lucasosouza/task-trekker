@@ -81,7 +81,7 @@
 						<tr ng-repeat="registro in dados | porProjeto:projSelecionado" ng-class="{highlight: (registro==regSelecionado)}">
 							<td>{{ registro.atividade }}</td>					
 							<td>{{ registro.tempoEstimado | number:0 }}</td>
-							<td>{{ registro.tempoRealizado | number:1 }}</td>
+							<td>{{ registro.tempoRealizado | number:0 }}</td>
 							<td>{{ registro.dataPlanejada | formataData}}</td>				
 							<td>{{ registro.dataConcluida | formataData}}</td>
 							<td>{{ registro.diario }}</td>

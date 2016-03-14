@@ -146,7 +146,7 @@ app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 	}
 
 	function atualizaTempoRealizado(reg){
-		reg.tempoRealizado = reg.timer.secs/60 + reg.timer.mins + reg.timer.hrs*60 + reg.timer.days*60*24
+		reg.tempoRealizado = reg.timer.mins + reg.timer.hrs*60 + reg.timer.days*60*24
 	}
 
 	$scope.novoRegistro = function(){
