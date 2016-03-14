@@ -7,32 +7,103 @@ app.filter('numberFixedLen', function () {
     };
 });
 
+app.filter('porProjeto', function() {
+	return function(input, selecionado) {
+		return input.filter(function(elem, idx, array){
+			if ((elem.projeto) == selecionado) {
+				return elem
+			}
+		})
+	}
+})
+
+app.filter('formataData', function($filter){
+	return function(input){
+		$filter('date')(new Date(), 'yyyy-MM-ddTHH:mm:ss')
+		if (input) {
+			return $filter('date')(new Date(input), 'dd/MM/yyyy')
+		}
+		return input
+	}
+})
+
+
 //create controller
 app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 
 	var ref = new Firebase("https://time-trekker.firebaseio.com")
-	$scope.dados = $firebaseArray(ref)
+	var refRegistros = ref.child('registros')
+	var refProjetos = ref.child('projetos')
+	$scope.dados = $firebaseArray(refRegistros)
+	$scope.projetos = $firebaseArray(refProjetos)
+	$scope.mostraRegistroForm = true;
 	var registroNovo = true
 
-	//why go through all this? in 30 minutes I could have coded my own timer
-	$scope.timer = {
-		secs: 0,
-		mins: 0,
-		hrs: 0,
-		days: 0
-	}
-
+	//my very own timer
 	var inicio;
 	$scope.inicia = function(reg){
 		console.log('inicio')
 		inicio = $interval(function(){
 			adicionaSegundo(reg)
-		},1000)
+		},999) //1 milisegundo para processamento, a headstart for the timer
 	}
 
-	$scope.para = function(){
+	$scope.zera = function(reg){
+		reg.timer.days = 0;
+		reg.timer.hrs = 0;
+		reg.timer.mins = 0;
+		reg.timer.secs = 0;
+		$scope.dados.$save(reg)		
+	}
+
+	$scope.add5 = function(reg){
+		if (reg.timer.mins < 55) {
+			reg.timer.mins = reg.timer.mins+5
+		} else {
+			reg.timer.mins = 0 + (reg.timer.mins-55)
+			//adiciona hora
+			if (reg.timer.hrs < 23) {
+				reg.timer.hrs++
+			} else if (reg.timer.hrs == 23) {
+				reg.timer.hrs = 0
+				//adiciona dia
+				reg.timer.days++
+			}
+		}
+		atualizaTempoRealizado(reg)
+		$scope.dados.$save(reg)		
+	}
+
+	$scope.del5 = function(reg){
+		if (reg.tempoRealizado < 5) {
+			reg.timer.days = 0;
+			reg.timer.hrs = 0;
+			reg.timer.mins = 0;
+			reg.timer.secs = 0;
+		} else {
+			//remove minutos
+			if (reg.timer.mins >= 5) {
+				reg.timer.mins = reg.timer.mins-5
+			} else {
+				reg.timer.mins = 60 - (5-reg.timer.mins)
+				//remove hora
+				if (reg.timer.hrs > 0) {
+					reg.timer.hrs--
+				} else {
+					reg.timer.hrs = 23
+					//remove dia
+					reg.timer.days--
+				}
+			}
+		}
+		atualizaTempoRealizado(reg)
+		$scope.dados.$save(reg)
+	}
+
+	$scope.para = function(reg){
 		$interval.cancel(inicio)
 		inicio = undefined
+		$scope.dados.$save(reg)
 	}
 
 	function adicionaSegundo(reg) {
@@ -56,9 +127,14 @@ app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 				}
 			}
 		}
+		atualizaTempoRealizado(reg)
+		if ((reg.timer.secs == 0) || (reg.timer.secs == 30)){
+			$scope.dados.$save(reg)
+		}
+	}
+
+	function atualizaTempoRealizado(reg){
 		reg.tempoRealizado = reg.timer.secs/60 + reg.timer.mins + reg.timer.hrs*60 + reg.timer.days*60*24
-		//console.log(reg.timer)
-		//console.log(reg.tempoRealizado)
 	}
 
 	$scope.novoRegistro = function(){
@@ -68,15 +144,26 @@ app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 				mins: 0,
 				hrs: 0,
 				days: 0
-			}
+			},
+			dataPlanejada: new Date(),
+			dataConcluida: new Date()
 		};
 		registroNovo = true
-		//console.log($scope.reg)
+		if (!$scope.mostraRegistroForm) {
+			$scope.mostraRegistroForm = true;
+		} else {
+			$scope.mostraRegistroForm = false;
+		}
 	}
 
 	$scope.editaRegistro = function(id){
 		$scope.reg = $scope.dados.$getRecord(id);
+		//converte data ao carregar
+		$scope.reg.dataPlanejada = new Date($scope.reg.dataPlanejada)
+		$scope.reg.dataConcluida = new Date($scope.reg.dataConcluida)
+		//marcadores
 		registroNovo = false;
+		$scope.mostraRegistroForm = true;
 	}
 
 	$scope.deletaRegistro = function(reg){
@@ -84,16 +171,26 @@ app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 	}
 
 	$scope.enviaRegistro = function(reg){
-		console.log('enviandoRegistro', reg)
-		reg.tempoRealizado = reg.timer.mins + reg.timer.hrs*60 + reg.timer.days*60*24
+		//converte data antes de salvar
+		console.log(reg.dataPlanejada, reg.dataConcluida)
+		reg.dataPlanejada = reg.dataPlanejada.toISOString();
+		reg.dataConcluida = reg.dataConcluida.toISOString();
+		console.log(reg.dataPlanejada, reg.dataConcluida)
+		//salva
+		console.log('enviandoRegistro', reg)	
 		if (registroNovo) {
 			$scope.dados.$add(reg)
 		} else {
 			$scope.dados.$save(reg)
 		}
+		$scope.mostraRegistroForm = false
+	}
+
+	$scope.enviaProjeto = function(projeto) {
+		$scope.projetos.$add(projeto);
+		$scope.novoProjeto = '';
 	}
 
 	$scope.novoRegistro()
-
 
 })
