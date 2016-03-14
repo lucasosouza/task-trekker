@@ -1,0 +1,111 @@
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+		<title>
+			TimeTrekker
+		</title>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
+		<script src="https://cdn.firebase.com/js/client/2.4.1/firebase.js"></script>
+		<script src="https://cdn.firebase.com/libs/angularfire/1.1.4/angularfire.min.js"></script>
+		<script src="app.js"></script>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+		<link rel="stylesheet" href="style.css"></style>		
+	</head>
+	<body ng-app="timeTrekker">
+		<div class="container" ng-controller="mainCtrl">
+
+			<!-- actual timer by activity -->
+			<!-- seleciona uma atividade de uma lista de opções -->
+			<div class="form-group">
+				<label>Selecione a atividade</label>
+				<select type="text" class="form-control" ng-options="reg as reg.atividade for reg in dados" ng-model="regSelecionado"></select>
+			</div>
+			
+			<!-- timer -->
+			<div class="bs-docs-example">
+	            <h3>
+	                {{ regSelecionado.timer.days }}:{{ regSelecionado.timer.hrs | numberFixedLen:2 }}:{{ regSelecionado.timer.mins | numberFixedLen:2}}:{{ regSelecionado.timer.secs | numberFixedLen:2}}
+	            </h3>
+	            <button class="btn btn-success" ng-click="inicia(regSelecionado)" type="button">Inicia</button>
+	            <button class="btn btn-danger" ng-click="para()" type="button">Para</button>
+	        </div>
+
+
+			<!-- table showing all current activities -->
+			<!-- possibility to delete and edit them ? -->
+			<!-- dar um highlight na tarefa em execução no cronometro -->
+			<br>
+			<br>
+			<hr>
+			<div>
+				<br>
+				<table class="table table-bordered">		
+					<thead>
+						<tr>
+							<th>Atividade</th>
+							<th>Tempo Estimado (min)</th>
+							<th>Tempo Realizado (min)</th>
+							<th>Data Planejada</th>
+							<th>Data Concluída</th>
+							<th>Diário</th>
+							<th></th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="registro in dados">
+							<td>{{ registro.atividade }}</td>					
+							<td>{{ registro.tempoEstimado | number:2 }}</td>
+							<td>{{ registro.tempoRealizado | number:2 }}</td>
+							<td>{{ registro.dataPlanejada }}</td>				
+							<td>{{ registro.dataConcluida }}</td>
+							<td>{{ registro.diario }}</td>
+							<td><a href ng-click="editaRegistro(registro.$id)">Editar</a></td>
+							<td><a href ng-click="deletaRegistro(registro)">Apagar</a></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<br>
+			<br>
+
+			<!-- a form to add a new activity or edit an existing one -->
+			<!-- can edit all fields -->
+			<a href ng-click="novoRegistro()"><span class="glyphicon glyphicon-plus"></span> Nova atividade</a>
+			<hr>
+			<div class="col-md-6 col-md-offset-3">
+				<form ng-submit="enviaRegistro(reg)">
+					<div class="form-group">
+						<label>Atividade</label>
+						<input type="text" class="form-control" ng-model="reg.atividade" />
+					</div>
+					<div class="form-group">
+						<label>Tempo Estimado(min)</label>
+						<input type="number" class="form-control" ng-model="reg.tempoEstimado" />
+					</div>
+					<div class="form-group">
+						<label>Tempo Realizado(min)</label>
+						<input type="number" class="form-control"  ng-model="reg.tempoRealizado" />
+					</div>
+					<div class="form-group">
+						<label>Data Planejada</label>
+						<input type="date" class="form-control" ng-model="reg.dataPlanejada">
+					</div>
+					<div class="form-group">
+						<label>Data Concluída</label>
+						<input type="date" class="form-control" ng-model="reg.dataConcluida">
+					</div>
+					<div class="form-group">
+						<label>Diário</label>
+						<textarea class="form-control" rows="8" cols="10" ng-model="reg.diario" ></textarea>
+					</div>
+					<button type="submit" class="btn btn-primary">Atualizar atividade</button>
+				</form>
+			</div>
+			<br>
+			<br>	
+
+		</div>
+	</body>
+</html>
