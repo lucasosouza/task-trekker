@@ -38,6 +38,7 @@ app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 	$scope.projetos = $firebaseArray(refProjetos)
 	$scope.mostraRegistroForm = true;
 	var registroNovo = true
+	$scope.horaCerta = new Date()
 
 	//my very own timer
 	var inicio;
@@ -111,6 +112,8 @@ app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 	}
 
 	function salvaRegistro(reg){
+		console.log((new Date() - $scope.horaCerta)/ 1000)
+		$scope.horaCerta = new Date()
 		$scope.dados.$save(reg).then(function(ref){
 			console.log('Salvo com sucesso: ', ref)
 		}, function(error){
