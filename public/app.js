@@ -38,16 +38,17 @@ app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 	$scope.projetos = $firebaseArray(refProjetos)
 	$scope.mostraRegistroForm = true;
 	var registroNovo = true
-	$scope.horaCerta = new Date()
+	var horaInicial;
 
 	//my very own timer
 	var inicio;
 	var relogios = {}
 	$scope.inicia = function(reg){
-		console.log('inicio')
+		console.log('inicio');
+		horaInicial = new Date();
 		relogios[reg.$id] = $interval(function(){
 			adicionaSegundo(reg)
-		},999) //1 milisegundo para processamento, a headstart for the timer
+		},1000)
 	}
 
 	$scope.zera = function(reg){
@@ -112,8 +113,6 @@ app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 	}
 
 	function salvaRegistro(reg){
-		console.log((new Date() - $scope.horaCerta)/ 1000)
-		$scope.horaCerta = new Date()
 		$scope.dados.$save(reg).then(function(ref){
 			console.log('Salvo com sucesso: ', ref)
 		}, function(error){
@@ -122,16 +121,55 @@ app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 	}
 
 	function adicionaSegundo(reg) {
-		//adiciona segundo
-		if (reg.timer.secs < 59) {
-			reg.timer.secs = reg.timer.secs + 1
-		} else if (reg.timer.secs == 59) {
-			reg.timer.secs = 0
-			//adiciona minuto
-			if (reg.timer.mins < 59) {
-				reg.timer.mins++
-			} else if (reg.timer.mins == 59) {
-				reg.timer.mins = 0
+		//calcula diferença e corrige o timer
+		var secs = Math.round((new Date() - horaInicial)/1000)
+		horaInicial = new Date()
+		corrigeHora(reg, secs)		
+		//atualiza tempo realizado
+		atualizaTempoRealizado(reg)	
+		//salva registro
+		if ((reg.timer.secs == 0) || (reg.timer.secs == 30)){
+			salvaRegistro(reg)
+		}
+	}
+
+	function corrigeHora(reg, secs) {
+		//transforma n em segundos e minutos (horas depois)
+		//dá pra simplificar batante
+		var nsecs=secs;
+		var nmins=0;
+		if (nsecs>59) {
+			nsecs = 59;
+			nmins = Math.ceil((n-59)/60);
+		}
+		//adiciona segundos ao timer
+		if (nsecs>0) {
+			if (reg.timer.secs < (60-nsecs)) {
+				reg.timer.secs = reg.timer.secs + nsecs
+			} else {
+				reg.timer.secs = nsecs-(60-reg.timer.secs)
+				//adiciona minuto
+				if (reg.timer.mins < 59) {
+					reg.timer.mins++
+				} else if (reg.timer.mins == 59) {
+					reg.timer.mins = 0
+					//adiciona hora
+					if (reg.timer.hrs < 23) {
+						reg.timer.hrs++
+					} else if (reg.timer.hrs == 23) {
+						reg.timer.hrs = 0
+						//adiciona dia
+						reg.timer.days++
+					}
+				}
+			}			
+		}
+		//adiciona minutos ao timer
+		if (nmins > 0) {
+			if (reg.timer.mins < (60-nmins)) {
+				reg.timer.mins = reg.timer.mins + nmins
+			} else {
+				reg.timer.mins = nmins-(60-reg.timer.mins)
 				//adiciona hora
 				if (reg.timer.hrs < 23) {
 					reg.timer.hrs++
@@ -140,13 +178,9 @@ app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 					//adiciona dia
 					reg.timer.days++
 				}
-			}
+			}			
 		}
-		atualizaTempoRealizado(reg)
-		if ((reg.timer.secs == 0) || (reg.timer.secs == 30)){
-			salvaRegistro(reg)
-		}
-	}
+	}	
 
 	function atualizaTempoRealizado(reg){
 		reg.tempoRealizado = reg.timer.mins + reg.timer.hrs*60 + reg.timer.days*60*24
