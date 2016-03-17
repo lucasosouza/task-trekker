@@ -9,8 +9,9 @@
 		<script src="https://cdn.firebase.com/js/client/2.4.1/firebase.js"></script>
 		<script src="https://cdn.firebase.com/libs/angularfire/1.1.4/angularfire.min.js"></script>
 		<script src="app.js"></script>
+		<script src="controller.js"></script>
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-		<link rel="stylesheet" href="style.css"></style>		
+		<link rel="stylesheet" href="style.css">		
 	</head>
 	<body ng-app="timeTrekker">
 		<div class="container" ng-controller="mainCtrl">
@@ -24,6 +25,9 @@
  -->
 				<!-- actual timer by activity -->
 				<!-- seleciona uma atividade de uma lista de opções -->
+	        <h3 class="header">{{ regDia.timer | converteTimer }}</h3>
+            <button class="btn btn-default" ng-click="reiniciaDia()" type="button">Zera</button>
+			<br>
 			<br>
 			<div class="row">
 				<div class="col-sm-4">
@@ -46,7 +50,7 @@
 			<div class="row">
 				<div class="col-sm-4">
 		            <h3>
-		                {{ regSelecionado.timer.days }}:{{ regSelecionado.timer.hrs | numberFixedLen:2 }}:{{ regSelecionado.timer.mins | numberFixedLen:2}}:{{ regSelecionado.timer.secs | numberFixedLen:2}}
+		                {{ regSelecionado.timer | converteTimer }}
 		            </h3>
 		            <button class="btn btn-success" ng-click="inicia(regSelecionado)" type="button">Inicia</button>
 		            <button class="btn btn-danger" ng-click="para(regSelecionado)" type="button">Para</button>
@@ -55,6 +59,8 @@
 		            <button class="btn btn-default" ng-click="zera(regSelecionado)" type="button">Zera</button>
 		        </div>
 			</div>
+
+
 
 
 			<!-- table showing all current activities -->
@@ -81,7 +87,7 @@
 						<tr ng-repeat="registro in dados | porProjeto:projSelecionado" ng-class="{highlight: (registro==regSelecionado)}">
 							<td>{{ registro.atividade }}</td>					
 							<td>{{ registro.tempoEstimado | number:0 }}</td>
-							<td>{{ registro.tempoRealizado | number:0 }}</td>
+							<td>{{ registro.timer | converteMinutos }}</td>
 							<td>{{ registro.dataPlanejada | formataData}}</td>				
 							<td>{{ registro.dataConcluida | formataData}}</td>
 							<td>{{ registro.diario }}</td>
