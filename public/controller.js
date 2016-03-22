@@ -141,7 +141,7 @@ app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 	//dia
 	//abre o aplicativo, verifica se o dia
 	function verificaDia(){
-		var dia = new Date().toISOString().slice(0, 10);
+		var dia = new Date().toLocaleDateString();
 		//verifica se já existe
 		$scope.calendario.$loaded(function(){
 			angular.forEach($scope.calendario, function(k, v){
@@ -163,7 +163,7 @@ app.controller('mainCtrl', function($scope, $http, $firebaseArray, $interval){
 
 	$scope.reiniciaDia = function(){
 		$scope.dados.$remove($scope.regDia);
-		var dia = new Date().toISOString().slice(0, 10);
+		var dia = new Date().toLocaleDateString();
 		$scope.calendario.$add({ timer: 0, dia: dia }).then(function(ref){
 			$scope.regDia = $scope.calendario.$getRecord(ref.key());
 		})							
